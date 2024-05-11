@@ -156,7 +156,7 @@ func (t *timeline) _notifyRegistedObserver(deltaMS float64) {
 
 	// 通知一次性订阅的observer
 	oneTimeObserver := t.dequeueOneTimelineObserver()
-	for oneTimeObserver == nil {
+	for oneTimeObserver != nil {
 		threadingx.RunSafe(func() {
 			oneTimeObserver.OnNext(deltaMS)
 		})
