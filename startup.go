@@ -10,15 +10,12 @@ var (
 )
 
 func init() {
-	timeline := newTimeline()
-	sceneTimer := newSceneTimer()
+	_globalTimeline = newTimeline()
+	_globalSceneTimer = newSceneTimer()
 	_globalLogicThread = threading.NewLogicThread()
 
-	timeline.setSceneTimer(_globalSceneTimer)
-	sceneTimer.setTimeline(_globalTimeline)
-
-	_globalSceneTimer = sceneTimer
-	_globalTimeline = timeline
+	_globalTimeline.(*timeline).setSceneTimer(_globalSceneTimer)
+	_globalSceneTimer.(*sceneTimer).setTimeline(_globalTimeline)
 }
 
 func GlobalTimeline() ITimeline {

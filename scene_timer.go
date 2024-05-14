@@ -44,7 +44,7 @@ type sceneTimer struct {
 	timeline ITimeline
 }
 
-func newSceneTimer() *sceneTimer {
+func newSceneTimer() ISceneTimer {
 	t := &sceneTimer{
 		taskScheduler: scheduler.NewTaskScheduler(),
 	}
