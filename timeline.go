@@ -17,7 +17,7 @@ type ITimeline interface {
 
 	// 订阅时间轴轮轮循通知，只通知一次，通知到达一次后在下次的时间轴中将不会再次通知，此方法会自动执行取消订阅
 	// delayTime: 延时再执行，如果不设置，则立即执行
-	SubscribeAsOnTime(timelineObserver ITimelineObserver, delayTime *time.Duration)
+	SubscribeAsOneTime(timelineObserver ITimelineObserver, delayTime *time.Duration)
 
 	// 取消原有的订阅
 	Unsubscribe(timelineObserver ITimelineObserver)
@@ -81,7 +81,7 @@ func (t *timeline) Subscribe(timelineObserver ITimelineObserver) ITimelineObserv
 }
 
 // 订阅时间轴轮轮循通知，只通知一次，通知到达一次后在下次的时间轴中将不会再次通知，此方法会自动执行取消订阅
-func (t *timeline) SubscribeAsOnTime(timelineObserver ITimelineObserver, delayTime *time.Duration) {
+func (t *timeline) SubscribeAsOneTime(timelineObserver ITimelineObserver, delayTime *time.Duration) {
 	if timelineObserver == nil {
 		return
 	}

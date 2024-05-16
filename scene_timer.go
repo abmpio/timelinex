@@ -73,7 +73,7 @@ func (s *sceneTimer) StartNewOneTimer(delayInterval time.Duration,
 	observer := s.taskScheduler.AfterFunc(delayInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		v := ti.Value.(func())
 		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOnTime(Observer(v), nil)
+		s.timeline.SubscribeAsOneTime(Observer(v), nil)
 		return nil
 	})
 	return observer.GetKey()
@@ -97,7 +97,7 @@ func (s *sceneTimer) StartNewOneTimerWithData(delayInterval time.Duration,
 	observer := s.taskScheduler.AfterFunc(delayInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		tValue := ti.Value.(tuple.T2[func(interface{}), interface{}])
 		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOnTime(ObserverFromActionWithT[any](tValue.V1, tValue.V2), nil)
+		s.timeline.SubscribeAsOneTime(ObserverFromActionWithT[any](tValue.V1, tValue.V2), nil)
 		return nil
 	})
 	return observer.GetKey()
@@ -116,7 +116,7 @@ func (s *sceneTimer) StartRecurNewTimer(timerInterval time.Duration, action func
 	observer := s.taskScheduler.SchedulerFuncOneByOne(timerInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		aValue := ti.Value.(func())
 		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOnTime(Observer(aValue), nil)
+		s.timeline.SubscribeAsOneTime(Observer(aValue), nil)
 		return nil
 	})
 	return observer.GetKey()

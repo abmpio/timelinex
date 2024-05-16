@@ -50,13 +50,16 @@ func NewTaskScheduler() ITaskScheduler {
 func (s *taskScheduler) _afterFunc(interval time.Duration,
 	taskItem *TaskItem,
 	callback func(*TaskItem) error,
-	observer *taskSchedulerObserver) {
+	observer *taskSchedulerObserver,
+	observerItemReseve bool) {
 	taskItem.ensureHasKey()
 	t := s.timingWheel.AfterFunc(interval, func() {
-		defer func() {
-			//执行完成后删除key
-			s.schedulerObserverList.Del(taskItem.key)
-		}()
+		if !observerItemReseve {
+			defer func() {
+				//执行完成后删除key
+				s.schedulerObserverList.Del(taskItem.key)
+			}()
+		}
 		//触发回调
 		threading.SafeCallFunc(func() {
 			if callback != nil {
@@ -67,8 +70,10 @@ func (s *taskScheduler) _afterFunc(interval time.Duration,
 		threading.SafeCallFunc(observer.notifyCompleted)
 	}).SetKey(taskItem.key)
 	observer.timer = t
-	//增加到待执行的列表中
-	s.schedulerObserverList.Set(taskItem.key, observer)
+	if !observerItemReseve {
+		//增加到待执行的列表中
+		s.schedulerObserverList.Set(taskItem.key, observer)
+	}
 }
 
 // #region ITaskScheduler Members
@@ -84,7 +89,7 @@ func (s *taskScheduler) AfterFunc(interval time.Duration,
 	observer.taskItem = taskItem
 	observer.AddCompleteCallbacks(completeOpts...)
 
-	s._afterFunc(interval, taskItem, callback, observer)
+	s._afterFunc(interval, taskItem, callback, observer, false)
 	return observer
 }
 
@@ -142,11 +147,13 @@ func (s *taskScheduler) SchedulerFuncOneByOne(interval time.Duration,
 			return
 		}
 		//再次启动
-		s._afterFunc(interval, taskItem, callback, observer)
+		s._afterFunc(interval, taskItem, callback, observer, true)
 	}
 	observer.AddCompleteCallbacks(compCallback)
 
-	s._afterFunc(interval, taskItem, callback, observer)
+	s._afterFunc(interval, taskItem, callback, observer, true)
+	//增加到正在执行的列表中
+	s.schedulerObserverList.Set(taskItem.key, observer)
 	return observer
 }
 
