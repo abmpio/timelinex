@@ -3,7 +3,7 @@ package scheduler
 import "time"
 
 var (
-	_taskScheduler ITaskScheduler
+	_taskScheduler ITaskScheduler = NewTaskScheduler()
 )
 
 // 调度一个函数，此函数按照interval时间定期执行,这个定时器的回调是不会存在着并行执行的
