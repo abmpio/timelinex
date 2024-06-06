@@ -7,6 +7,10 @@ import (
 	"github.com/abmpio/timelinex/scheduler"
 )
 
+const (
+	taskItem_PropertiesKey_DontRunInTimelineThread = "dontRunInTimelineThread"
+)
+
 type ISceneTimer interface {
 	// 启动一个新的计时器(一次性触发的)
 	// delayInterval 延时多久后触发回调
@@ -33,6 +37,13 @@ type SceneTimerOption = func(i *scheduler.TaskItem)
 func SceneTimerOptionWithKey(key string) SceneTimerOption {
 	return func(i *scheduler.TaskItem) {
 		i.SetKey(key)
+	}
+}
+
+// 新的定时器回调不运行在时间轴线程，也就是逻辑线程
+func SceneTimerOptionWithDontRunInTimelineThread() SceneTimerOption {
+	return func(i *scheduler.TaskItem) {
+		i.SetProperty(taskItem_PropertiesKey_DontRunInTimelineThread, true)
 	}
 }
 
@@ -72,8 +83,16 @@ func (s *sceneTimer) StartNewOneTimer(delayInterval time.Duration,
 	}
 	observer := s.taskScheduler.AfterFunc(delayInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		v := ti.Value.(func())
-		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOneTime(Observer(v), nil)
+
+		pValue := ti.GetProperty(taskItem_PropertiesKey_DontRunInTimelineThread)
+		dontRunInTimelineThread, ok := pValue.(bool)
+		if ok && dontRunInTimelineThread {
+			// 不运行在时间轴
+			v()
+		} else {
+			// 将这个回调执行在时间轴中
+			s.timeline.SubscribeAsOneTime(Observer(v), nil)
+		}
 		return nil
 	})
 	return observer.GetKey()
@@ -90,14 +109,22 @@ func (s *sceneTimer) StartNewOneTimerWithData(delayInterval time.Duration,
 
 	taskItem := scheduler.NewTaskItem()
 	taskItemValue := tuple.New2(action, data)
-	taskItem.Value = &taskItemValue
+	taskItem.Value = taskItemValue
 	for _, eachOpt := range opts {
 		eachOpt(taskItem)
 	}
 	observer := s.taskScheduler.AfterFunc(delayInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		tValue := ti.Value.(tuple.T2[func(interface{}), interface{}])
-		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOneTime(ObserverFromActionWithT[any](tValue.V1, tValue.V2), nil)
+
+		pValue := ti.GetProperty(taskItem_PropertiesKey_DontRunInTimelineThread)
+		dontRunInTimelineThread, ok := pValue.(bool)
+		if ok && dontRunInTimelineThread {
+			// 不运行在时间轴
+			tValue.V1(tValue.V2)
+		} else {
+			// 将这个回调执行在时间轴中
+			s.timeline.SubscribeAsOneTime(ObserverFromActionWithT[any](tValue.V1, tValue.V2), nil)
+		}
 		return nil
 	})
 	return observer.GetKey()
@@ -115,8 +142,16 @@ func (s *sceneTimer) StartRecurNewTimer(timerInterval time.Duration, action func
 	//增加到调度队列中
 	observer := s.taskScheduler.SchedulerFuncOneByOne(timerInterval, taskItem, func(ti *scheduler.TaskItem) error {
 		aValue := ti.Value.(func())
-		// 将这个回调执行在时间轴中
-		s.timeline.SubscribeAsOneTime(Observer(aValue), nil)
+
+		pValue := ti.GetProperty(taskItem_PropertiesKey_DontRunInTimelineThread)
+		dontRunInTimelineThread, ok := pValue.(bool)
+		if ok && dontRunInTimelineThread {
+			// 不运行在时间轴
+			aValue()
+		} else {
+			// 将这个回调执行在时间轴中
+			s.timeline.SubscribeAsOneTime(Observer(aValue), nil)
+		}
 		return nil
 	})
 	return observer.GetKey()
