@@ -9,7 +9,7 @@ var (
 // 调度一个函数，此函数按照interval时间定期执行,这个定时器的回调是不会存在着并行执行的
 // 下一个定时的触发机制是在这个回调执行完成后再开始计时
 // 返回用于此调度的observer对象
-func SchedulerTask(d time.Duration,
+func SchedulerTaskOneByOne(d time.Duration,
 	taskId string,
 	timerFunc func(string) error,
 	finishedCallback ...func(ITaskSchedulerObserver)) ITaskSchedulerObserver {
@@ -17,6 +17,22 @@ func SchedulerTask(d time.Duration,
 	taskItem := NewTaskItem()
 	taskItem.Value = taskId
 	observer := _taskScheduler.SchedulerFuncOneByOne(d, taskItem, func(ti *TaskItem) error {
+		currentItemValue := ti.Value.(string)
+		return timerFunc(currentItemValue)
+	}, finishedCallback...)
+	return observer
+}
+
+// 调度一个函数，此函数按照interval时间定期执行,这个定时器的回调会存在着并行执行的
+// 返回用于此调度的observer对象
+func SchedulerTask(d time.Duration,
+	taskId string,
+	timerFunc func(string) error,
+	finishedCallback ...func(ITaskSchedulerObserver)) ITaskSchedulerObserver {
+
+	taskItem := NewTaskItem()
+	taskItem.Value = taskId
+	observer := _taskScheduler.SchedulerFunc(d, taskItem, func(ti *TaskItem) error {
 		currentItemValue := ti.Value.(string)
 		return timerFunc(currentItemValue)
 	}, finishedCallback...)
