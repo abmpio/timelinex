@@ -58,11 +58,23 @@ func newTaskSchedulerObserver(host *taskScheduler) *taskSchedulerObserver {
 // #region ITaskSchedulerObserver Members
 
 func (o *taskSchedulerObserver) GetKey() string {
-	return o.timer.GetKey()
+	if o == nil {
+		return ""
+	}
+	if o.timer != nil {
+		return o.timer.GetKey()
+	}
+	if o.taskItem != nil {
+		return o.taskItem.GetKey()
+	}
+	return ""
 }
 
 // 获取值
 func (o *taskSchedulerObserver) GetTaskItemValue() interface{} {
+	if o == nil || o.taskItem == nil {
+		return nil
+	}
 	return o.taskItem.Value
 }
 
@@ -79,20 +91,29 @@ func (o *taskSchedulerObserver) Stop() bool {
 	if o.scheduler != nil {
 		o.scheduler.stop()
 	}
+	key := ""
+	if o.taskItem != nil {
+		key = o.taskItem.GetKey()
+	}
+	if len(key) <= 0 && o.timer != nil {
+		key = o.timer.GetKey()
+	}
 
 	if o.timer == nil {
-		o.host.schedulerObserverList.Del(o.taskItem.key)
+		if o.host != nil && len(key) > 0 {
+			o.host.schedulerObserverList.Del(key)
+		}
 		return true
 	}
 	result := o.timer.Stop()
-	if result {
-		o.host.schedulerObserverList.Del(o.taskItem.key)
+	if result && o.host != nil && len(key) > 0 {
+		o.host.schedulerObserverList.Del(key)
 	}
 	return result
 }
 
 func (o *taskSchedulerObserver) AddCompleteCallbacks(callbacks ...func(ITaskSchedulerObserver)) {
-	if callbacks == nil || len(callbacks) <= 0 {
+	if len(callbacks) <= 0 {
 		return
 	}
 	o.completeCallbackList = append(o.completeCallbackList, callbacks...)

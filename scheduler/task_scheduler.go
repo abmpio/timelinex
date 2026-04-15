@@ -123,6 +123,7 @@ func (s *taskScheduler) SchedulerFunc(interval time.Duration,
 	if t == nil {
 		return nil
 	}
+	observer.timer = t
 	s.schedulerObserverList.Set(taskItem.key, observer)
 	return observer
 }
