@@ -116,6 +116,9 @@ func (t *timeline) Unsubscribe(timelineObserver ITimelineObserver) {
 	}
 	if removeIndex > -1 {
 		t.registedObserverList = removeSliceByIndex(t.registedObserverList, removeIndex)
+		// 标记工作快照过期，让下一个 tick 重新构建 workingObserverList。
+		// 否则已退订的 observer 仍可能继续留在轮循快照中。
+		t.isChanged.Set(true)
 	}
 }
 
@@ -149,7 +152,9 @@ func (t *timeline) _notifyRegistedObserver(deltaMS float64) {
 	if t.isChanged.Get() {
 		// 已经改变
 		t.rwLock.Lock()
-		t.workingObserverList = t.registedObserverList[:]
+		// 使用独立快照，避免 workingObserverList 与 registedObserverList 共享底层数组。
+		// 否则在 unsubscribe 时，当前工作快照会被原地污染，出现幽灵 observer / 重复 observer。
+		t.workingObserverList = append([]ITimelineObserver(nil), t.registedObserverList...)
 		t.isChanged.Set(false)
 		t.rwLock.Unlock()
 	}
