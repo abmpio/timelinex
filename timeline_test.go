@@ -11,7 +11,7 @@ func (o *testTimelineObserver) OnNext(deltaMS float64) {
 }
 
 func TestTimelineUnsubscribeStopsFutureNotifications(t *testing.T) {
-	timeline := newTimeline().(*timeline)
+	timeline := newTimeline()
 
 	observerA := &testTimelineObserver{}
 	observerB := &testTimelineObserver{}
@@ -36,7 +36,7 @@ func TestTimelineUnsubscribeStopsFutureNotifications(t *testing.T) {
 }
 
 func TestTimelineWorkingObserverSnapshotIsDetachedFromRegistry(t *testing.T) {
-	timeline := newTimeline().(*timeline)
+	timeline := newTimeline()
 
 	observerA := &testTimelineObserver{}
 	observerB := &testTimelineObserver{}

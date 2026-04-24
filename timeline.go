@@ -47,7 +47,7 @@ type timeline struct {
 	scenseTimer        ISceneTimer
 }
 
-func newTimeline() ITimeline {
+func newTimeline() *timeline {
 	timelineService := &timeline{
 		description: "timeline",
 

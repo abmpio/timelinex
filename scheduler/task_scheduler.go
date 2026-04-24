@@ -28,22 +28,30 @@ type ITaskScheduler interface {
 
 	//停止指定的调度项,如果key不存在，则返回false
 	StopScheduler(key string) bool
+
+	// stop scheduler, this will stop all scheduler
+	Stop()
 }
 
 type taskScheduler struct {
 	timingWheel *timingwheel.TimingWheel
 
 	schedulerObserverList *collection.SafeMap
+
+	_started bool
 }
 
 var _ ITaskScheduler = (*taskScheduler)(nil)
 
+// new taskscheduler and will start now
 func NewTaskScheduler() ITaskScheduler {
 	scheduler := &taskScheduler{
 		schedulerObserverList: collection.NewSafeMap(),
 	}
 	scheduler.timingWheel = timingwheel.NewTimingWheel(time.Millisecond, slots)
 	scheduler.timingWheel.Start()
+	scheduler._started = true
+
 	return scheduler
 }
 
@@ -77,6 +85,15 @@ func (s *taskScheduler) _afterFunc(interval time.Duration,
 }
 
 // #region ITaskScheduler Members
+
+// stop timingWheel, this will stop all scheduler
+func (s *taskScheduler) Stop() {
+	if !s._started {
+		// not started ,return now
+		return
+	}
+	s.timingWheel.Stop()
+}
 
 // 调度一个函数,指定时间后执行
 // 只执行一次

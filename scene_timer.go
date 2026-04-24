@@ -55,7 +55,7 @@ type sceneTimer struct {
 	timeline ITimeline
 }
 
-func newSceneTimer() ISceneTimer {
+func newSceneTimer() *sceneTimer {
 	t := &sceneTimer{
 		taskScheduler: scheduler.NewTaskScheduler(),
 	}
@@ -64,6 +64,11 @@ func newSceneTimer() ISceneTimer {
 
 func (s *sceneTimer) setTimeline(timeline ITimeline) {
 	s.timeline = timeline
+}
+
+// stop whole timer
+func (t *sceneTimer) Stop() {
+	t.taskScheduler.Stop()
 }
 
 // #region ISceneTimerService Members

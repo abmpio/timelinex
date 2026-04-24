@@ -26,7 +26,7 @@ func newWorkItemThreadOptions() *workItemThreadOptions {
 		id:                            shortuuid.New(),
 		abortThreadTimeout:            time.Duration(0),
 		warningWhenWorkItemDurationMs: 500,
-		threadWorkItemInterval:        16 * time.Microsecond,
+		threadWorkItemInterval:        16 * time.Millisecond,
 	}
 }
 
